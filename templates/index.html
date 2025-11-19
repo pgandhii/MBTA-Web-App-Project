@@ -10,5 +10,11 @@
   <body>
     <h1>Hi</h1>
     <p>This is an amazing app to help you find the nearest MBTA station</p>
+
+    <form action = "/nearest_mbta" method = "POST">
+      <label>Enter a place's name:</label><br>
+      <input type = "text" name = "place_name" placeholder = "e.g Boston Common">
+      <button type = "submit">Submit</button>
+    </form>
   </body>
 </html>

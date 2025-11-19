@@ -5,20 +5,20 @@ import urllib.request
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv("secrets.env")
 
 # Get API keys from environment variables
 MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 MBTA_API_KEY = os.getenv("MBTA_API_KEY")
 
-# Optional: helpful error messages if keys are missing
+# Helpful error messages if keys are missing
 if MAPBOX_TOKEN is None:
     raise RuntimeError("MAPBOX_TOKEN is not set. Check your .env file.")
 if MBTA_API_KEY is None:
     raise RuntimeError("MBTA_API_KEY is not set. Check your .env file.")
 
 # Useful base URLs (you need to add the appropriate parameters for each API request)
-MAPBOX_BASE_URL = "https://api.mapbox.com/search/searchbox/v1/forward"
+MAPBOX_BASE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/"
 MBTA_BASE_URL = "https://api-v3.mbta.com/"
 
 
@@ -40,26 +40,44 @@ def get_lat_lng(place_name: str) -> tuple[str, str]:
 
     See https://docs.mapbox.com/api/search/search-box/#search-request for Mapbox Search API URL formatting requirements.
     """
-    params = {
-        "access_token": MAPBOX_TOKEN,
-        "q": place_name,
-        "limit": 1,
-    }
+    place_encoded = urllib.parse.quote(place_name)
 
-    url = f"{MAPBOX_BASE_URL}?{urllib.parse.urlencode(params)}"
+    url = (
+        f"https://api.mapbox.com/geocoding/v5/mapbox.places/"
+        f"{place_encoded}.json?access_token={MAPBOX_TOKEN}&limit=1"
+    )
+
     data = get_json(url)
+    print("MAPBOX RAW RESPONSE:", json.dumps(data, indent=2))
 
     features = data.get("features", [])
     if not features:
-        # No results found
         return None, None
-
-    # Mapbox returns coordinates as [longitude, latitude]
-    coords = features[0]["geometry"]["coordinates"]
-    lng, lat = coords
-
-    # Return as strings (matches type hint tuple[str, str])
+    
+    lng, lat = features[0]["geometry"]["coordinates"]
     return str(lat), str(lng)
+
+    #Nidhi, I changed this code because it was throwing an error with flask
+    # params = {
+    #     "access_token": MAPBOX_TOKEN,
+    #     "q": place_name,
+    #     "limit": 1,
+    # }
+
+    # url = f"{MAPBOX_BASE_URL}?{urllib.parse.urlencode(params)}"
+    # data = get_json(url)
+
+    # features = data.get("features", [])
+    # if not features:
+    #     # No results found
+    #     return None, None
+
+    # # Mapbox returns coordinates as [longitude, latitude]
+    # coords = features[0]["geometry"]["coordinates"]
+    # lng, lat = coords
+
+    # # Return as strings (matches type hint tuple[str, str])
+    # return str(lat), str(lng)
 
 
 def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
