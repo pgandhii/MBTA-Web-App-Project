@@ -5,7 +5,7 @@ import urllib.request
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv("secrets.env")
+load_dotenv("secret.env")
 
 # Get API keys from environment variables
 MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
