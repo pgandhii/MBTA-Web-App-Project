@@ -1,32 +1,34 @@
+<!DOCTYPE html>
 <html>
-  <body>
-    <h1>Nearest MBTA Station to "{{ place }}"</h1>
+<head>
+    <meta charset="UTF-8">
+    <title>Nearest MBTA Stop</title>
+</head>
 
-    <p>Station: {{ stop }}</p>
-    <p>Wheelchair accessible: 
-       {% if wheelchair_accessible %}
-        Yes
-      {% else %}
-        No
-      {% endif %}
-    </p>
+<body>
+    <h1>Nearest MBTA Stop for "{{ place }}"</h1>
 
-<p>Transit type used: {{ route_type_label }}</p>
+    <p><strong>Stop:</strong> {{ stop }}</p>
+    <p><strong>Transit system:</strong> {{ system_type }}</p>
 
-{% if weather %}
-    <h2>Weather near this station</h2>
+
     <p>
-        {{ weather.temp }}° — {{ weather.description }}
-        {% if weather.icon %}
-            <br>
-            <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png"
-                 alt="Weather icon">
-        {% endif %}
+        <strong>Wheelchair accessible:</strong>
+        {% if wheelchair_accessible %} Yes {% else %} No {% endif %}
     </p>
-{% endif %}
 
-<br>
-<a href="/">Search again</a>
+    <!-- WOW FEATURE: WEATHER -->
+    {% if weather %}
+        <h2>Weather near this station</h2>
+        <p>{{ weather.temp }}° — {{ weather.description }}</p>
 
-  </body>
+        {% if weather.icon %}
+            <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png">
+        {% endif %}
+    {% endif %}
+
+    <br>
+    <a href="/">Search again</a>
+</body>
 </html>
+

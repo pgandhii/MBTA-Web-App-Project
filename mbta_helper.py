@@ -60,11 +60,10 @@ def get_lat_lng(place_name: str) -> tuple[str, str]:
     lng, lat = features[0]["geometry"]["coordinates"]
     return str(lat), str(lng)
 
-def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
+def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool, str]:
     """
-    Given latitude and longitude strings, return a (station_name, wheelchair_accessible) tuple for the nearest MBTA station to the given coordinates. wheelchair_accessible is True if the stop is marked as accessible, False otherwise.
-
-    See https://api-v3.mbta.com/docs/swagger/index.html#/Stop/ApiWeb_StopController_index for URL formatting requirements for the 'GET /stops' API.
+    Given latitude and longitude strings, return a (station_name, wheelchair_accessible, system_type)
+    tuple for the nearest MBTA station to the given coordinates.
     """
     params = {
         "api_key": MBTA_API_KEY,
@@ -81,10 +80,12 @@ def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
 
     stops = data.get("data", [])
     if not stops:
-        return None, None
+        return None, None, "Unknown"
 
     first_stop = stops[0]
     attrs = first_stop.get("attributes", {})
+
+    system_type = "MBTA Transit"
 
     name = attrs.get("name")
     wheelchair_boarding = attrs.get("wheelchair_boarding", 0)
@@ -92,7 +93,8 @@ def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
     # MBTA codes: 1 = accessible, 2 = not accessible, 0 = no info
     wheelchair_accessible = wheelchair_boarding == 1
 
-    return name, wheelchair_accessible
+    return name, wheelchair_accessible, system_type
+
 
 def get_nearest_station_with_type(latitude: str, longitude: str, route_type: str):
     """
@@ -179,7 +181,7 @@ def find_stop_near_with_weather(place_name: str):
         return None
 
     # Step 2: get nearest station using the SAME logic that already works
-    stop_name, wheelchair_accessible = get_nearest_station(lat, lng)
+    stop_name, wheelchair_accessible, system_type = get_nearest_station(lat, lng)
     if stop_name is None:
         return None
 
@@ -191,6 +193,7 @@ def find_stop_near_with_weather(place_name: str):
         "stop": stop_name,
         "wheelchair_accessible": wheelchair_accessible,
         "weather": weather,
+        "system_type": system_type
     }
 
 

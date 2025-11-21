@@ -30,13 +30,14 @@ def nearest_mbta():
             place = place,
             stop = result["stop"],
             wheelchair_accessible = result["wheelchair_accessible"],
-            weather = result["weather"]
+            weather = result["weather"],
+            system_type=result["system_type"]
         )
     except Exception as e:
         print("FLASK ERROR:", e)
         return render_template(
             "error.html",
-            message="Could not find an MBTA station for that location."
+            message="Could not find an MBTA station for that locationn!."
         )
 
 

@@ -11,19 +11,11 @@
     <h1>Hi</h1>
     <p>This is an amazing app to help you find the nearest MBTA station</p>
 
-    <form action = "/nearest_mbta" method = "POST">
-      <label>Enter a place's name:</label><br>
-      <input type = "text" name = "place_name" >
-      <label for="route_type">Choose transit type:</label><br>
-      <select id="route_type" name="route_type">
-        <option value="all">Any MBTA mode</option>
-        <option value="0">Light Rail (Green Line)</option>
-        <option value="1">Subway (Red/Orange/Blue)</option>
-        <option value="2">Commuter Rail</option>
-        <option value="3">Bus</option>
-        <option value="4">Ferry</option>
-    </select><br><br>
-      <button type = "submit">Submit</button>
-    </form>
+    <form action="/nearest_mbta" method="POST">
+  <label>Enter a place's name:</label><br>
+  <input type="text" name="place_name"><br><br>
+
+  <button type="submit">Find the nearest MBTA station</button>
+</form>
   </body>
 </html>
