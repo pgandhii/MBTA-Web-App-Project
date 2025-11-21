@@ -4,29 +4,42 @@ import mbta_helper
 app = Flask(__name__)
 
 
+
 @app.route("/")
 def index():
-    return render_template("index.html") #replaces the plain text with the HTML template
+    return render_template("index.html") 
 
-@app.route("/nearest_mbta", methods=["POST"]) #specifies that this route will only accept POST requests
+@app.route("/nearest_mbta", methods=["POST"])
 def nearest_mbta():
     place = request.form["place_name"]
 
     if place.strip() == "":
-        return render_template("error.html", message = "Please enter a valid place name.")
+        return render_template("error.html", message="Please enter a valid place name.")
     
     try:
-        stop, wheelchair_accessible = mbta_helper.find_stop_near(place)
+        result = mbta_helper.find_stop_near_with_weather(place)
+
+        if result is None:
+            return render_template(
+                "error.html",
+                message="Could not find an MBTA station for that location!!!! ."
+            )
+
         return render_template(
             "mbta_station.html",
             place = place,
-            stop = stop,
-            wheelchair_accessible = wheelchair_accessible
+            stop = result["stop"],
+            wheelchair_accessible = result["wheelchair_accessible"],
+            weather = result["weather"]
         )
-    except:
+    except Exception as e:
+        print("FLASK ERROR:", e)
         return render_template(
-            "error.html", 
-            message = "Could not find an MBTA station for that location.")
+            "error.html",
+            message="Could not find an MBTA station for that location."
+        )
+
+
 
 
 if __name__ == "__main__":

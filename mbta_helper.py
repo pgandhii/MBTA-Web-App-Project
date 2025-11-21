@@ -1,6 +1,7 @@
 import os
 import json
 import urllib.request
+import urllib.parse
 
 from dotenv import load_dotenv
 
@@ -10,6 +11,8 @@ load_dotenv("secret.env")
 # Get API keys from environment variables
 MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 MBTA_API_KEY = os.getenv("MBTA_API_KEY")
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
 
 # Helpful error messages if keys are missing
 if MAPBOX_TOKEN is None:
@@ -57,29 +60,6 @@ def get_lat_lng(place_name: str) -> tuple[str, str]:
     lng, lat = features[0]["geometry"]["coordinates"]
     return str(lat), str(lng)
 
-    #Nidhi, I changed this code because it was throwing an error with flask
-    # params = {
-    #     "access_token": MAPBOX_TOKEN,
-    #     "q": place_name,
-    #     "limit": 1,
-    # }
-
-    # url = f"{MAPBOX_BASE_URL}?{urllib.parse.urlencode(params)}"
-    # data = get_json(url)
-
-    # features = data.get("features", [])
-    # if not features:
-    #     # No results found
-    #     return None, None
-
-    # # Mapbox returns coordinates as [longitude, latitude]
-    # coords = features[0]["geometry"]["coordinates"]
-    # lng, lat = coords
-
-    # # Return as strings (matches type hint tuple[str, str])
-    # return str(lat), str(lng)
-
-
 def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
     """
     Given latitude and longitude strings, return a (station_name, wheelchair_accessible) tuple for the nearest MBTA station to the given coordinates. wheelchair_accessible is True if the stop is marked as accessible, False otherwise.
@@ -95,7 +75,9 @@ def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
     }
 
     url = f"{MBTA_BASE_URL}stops?{urllib.parse.urlencode(params)}"
+    print("DEBUG MBTA URL:", url)
     data = get_json(url)
+    print("DEBUG MBTA RESPONSE:", json.dumps(data, indent=2))
 
     stops = data.get("data", [])
     if not stops:
@@ -111,6 +93,106 @@ def get_nearest_station(latitude: str, longitude: str) -> tuple[str, bool]:
     wheelchair_accessible = wheelchair_boarding == 1
 
     return name, wheelchair_accessible
+
+def get_nearest_station_with_type(latitude: str, longitude: str, route_type: str):
+    """
+    Same as get_nearest_station but allows filtering by MBTA route_type.
+    route_type options:
+        "all" → no filter
+        "0"   → Light Rail (Green Line)
+        "1"   → Subway
+        "2"   → Commuter Rail
+        "3"   → Bus
+        "4"   → Ferry
+    """
+    params = {
+        "api_key": MBTA_API_KEY,
+        "sort": "distance",
+        "filter[latitude]": latitude,
+        "filter[longitude]": longitude,
+        "page[limit]": 1,
+    }
+
+    if route_type != "all":
+        params["filter[route_type]"] = route_type
+
+    url = f"{MBTA_BASE_URL}stops?{urllib.parse.urlencode(params)}"
+    data = get_json(url)
+
+    stops = data.get("data", [])
+    if not stops:
+        return None
+
+    attrs = stops[0]["attributes"]
+    name = attrs.get("name")
+    wheelchair = attrs.get("wheelchair_boarding", 0) == 1
+
+    # station coordinates (needed for weather)
+    lat = float(attrs.get("latitude"))
+    lng = float(attrs.get("longitude"))
+
+    return {
+        "name": name,
+        "wheelchair_accessible": wheelchair,
+        "lat": lat,
+        "lng": lng,
+    }
+
+# Weather API key
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
+def get_weather(lat: float, lng: float):
+    """
+    Returns weather info near the station.
+    """
+    if OPENWEATHER_API_KEY is None:
+        return None
+
+    params = {
+        "lat": lat,
+        "lon": lng,
+        "appid": OPENWEATHER_API_KEY,
+        "units": "imperial"
+    }
+
+    url = "https://api.openweathermap.org/data/2.5/weather?" + urllib.parse.urlencode(params)
+    data = get_json(url)
+
+    try:
+        return {
+            "temp": data["main"]["temp"],
+            "description": data["weather"][0]["description"],
+            "icon": data["weather"][0]["icon"],
+            "city": data.get("name", "")
+        }
+    except:
+        return None
+
+def find_stop_near_with_weather(place_name: str):
+    """
+    Returns nearest MBTA station + accessibility + weather.
+    Used by the Flask app.
+    """
+    # Step 1: get coordinates for the place
+    lat, lng = get_lat_lng(place_name)
+    if lat is None or lng is None:
+        return None
+
+    # Step 2: get nearest station using the SAME logic that already works
+    stop_name, wheelchair_accessible = get_nearest_station(lat, lng)
+    if stop_name is None:
+        return None
+
+    # Step 3: get weather near that location
+    weather = get_weather(float(lat), float(lng))
+
+    # Step 4: return a dict that app.py expects
+    return {
+        "stop": stop_name,
+        "wheelchair_accessible": wheelchair_accessible,
+        "weather": weather,
+    }
+
 
 
 def find_stop_near(place_name: str) -> tuple[str, bool]:
@@ -130,7 +212,7 @@ def main():
     """
     You should test all the above functions here
     """
-    test_place = "Wellesley"
+    test_place = "Boston Common"
     print("Testing with:", test_place)
     print("Coordinates:", get_lat_lng(test_place))
     print("Nearest stop + accessible:", find_stop_near(test_place))

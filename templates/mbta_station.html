@@ -3,8 +3,30 @@
     <h1>Nearest MBTA Station to "{{ place }}"</h1>
 
     <p>Station: {{ stop }}</p>
-    <p>Wheelchair accessible: {{ wheelchair }}</p>
+    <p>Wheelchair accessible: 
+       {% if wheelchair_accessible %}
+        Yes
+      {% else %}
+        No
+      {% endif %}
+    </p>
 
-    <a href="/">Back</a>
+<p>Transit type used: {{ route_type_label }}</p>
+
+{% if weather %}
+    <h2>Weather near this station</h2>
+    <p>
+        {{ weather.temp }}° — {{ weather.description }}
+        {% if weather.icon %}
+            <br>
+            <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png"
+                 alt="Weather icon">
+        {% endif %}
+    </p>
+{% endif %}
+
+<br>
+<a href="/">Search again</a>
+
   </body>
 </html>
