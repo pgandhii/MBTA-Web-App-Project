@@ -18,6 +18,8 @@ One major improvement in our workflow occurred after talking with the professor.
 
 A challenge we faced was understanding how the APIs behave in edge cases. For example, Mapbox sometimes returns multiple possible locations, which confused our code and led to unexpected errors. We only figured this out after discussing it withe professor. Another issue was that our helper functions were not returning results when called from outside the test block, which turned out to be an indentation error and a function-calling mistake. Solving this required a great amount of patience and attention to detail while checking each part of the output. 
 
+Additionally, Palak really found it a little challenging to understand HTML. It was already hard enough to understand python.
+
 For problem-solving, we used a combination of sources, such as AI tools, a friend's help for an alternate set of eyes, the professor's guidance and API docs. This approach helped us understand errors and the logic behind the API responses, and even prepare us for the final project. If we were to do this project again, we would spend more time learning the APIS instead of immediately dividn into the code. This made us a little AI dependent to understand every step. However, the lectures in class really helped with the OpenWeather work.
 
 # Teamwork & Work Division
